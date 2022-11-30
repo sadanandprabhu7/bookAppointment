@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<header>
+    <title></title>
+</header>
+<body>
+    <form onsubmit="saveform(event)">
+        <label>Name:</label>
+        <input type="text" id="name" name="username" required/>
+        <label>Email:</label>
+        <input type="text" id="email" name="email" required/>
+        <label>Phone:</label>
+        <input type="tel" id="phone" name="phone" required/>
+        <button>Submit</button>
+    </form>
+    <ul id='listOfUsers'></ul>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.1.3/axios.min.js"></script>
+    <script>
+        function saveform(event)
+        {
+            event.preventDefault();
+            const name=event.target.username.value;
+            const email=event.target.email.value;
+            const phone=event.target.phone.value;
+            if(localStorage.getItem(email) !==null)
+            {
+                alert('please enter unique email');
+               
+            }
+            const obj ={
+                name,
+                email,
+                phone
+            }
+            axios.post("http://localhost:5000/save",obj)
+            .then((res)=>{
+                showFinal(res.data.newUserDetails)
+                
+               
+               
+            })
+            .catch((err)=>{
+                document.body.innerHTML=document.body.innerHTML+'<h4>Somthing went wrong</h4>'
+            })
+            
+        }
+
+        function showFinal(user)
+        {
+            document.getElementById('email').value='';
+            document.getElementById('name').value='';
+            document.getElementById('phone').value='';
+            
+           
+
+            const parentnode = document.getElementById('listOfUsers');
+            const li = `<li id=${user.id}> ${user.name} - ${user.email}-${user.phone}
+                <button onclick=deleteUser('${user.id}')>Delete</button>
+                <button onclick=edit('${user.email}','${user.name}','${user.phone}','${user.id}')>Edit</button>
+                </li>`
+            parentnode.innerHTML=parentnode.innerHTML+li;
+        }
+
+        function edit(emailId,name,phone,userID)
+        {
+         
+                document.getElementById('email').value=emailId;
+                document.getElementById('name').value=name;
+                document.getElementById('phone').value=phone;
+            deleteUser(userID)
+            
+        }
+        function deleteUser(userID)
+        {
+            axios
+            .delete(`http://localhost:5000/${userID}`)
+            .then((res)=>{
+                console.log(res);
+            })
+            .catch((err)=>{
+                document.body.innerHTML=document.body.innerHTML+'<h4>Somthing went wrong</h4>'
+            })
+     
+           removeFromScreen(userID);
+        }
+
+        function removeFromScreen(userID)
+        {
+            let parentnode = document.getElementById('listOfUsers');
+            let userDelte = document.getElementById(userID);
+            
+            if(userDelte)
+            {
+                parentnode.removeChild(userDelte);
+            }
+        }
+        window.addEventListener("DOMContentLoaded", () => {
+
+        axios
+        .get("http://localhost:5000/")
+        .then((res)=>{
+            for(let i=0; i<res.data.newUserDetails.length; i++)
+            {
+                showFinal(res.data.newUserDetails[i]);
+            }
+        })
+        .catch((err)=>{
+            document.body.innerHTML=document.body.innerHTML+'<h4>Somthing went wrong</h4>'
+        })
+        }) 
+
+    </script>
+</body>
+</html>
